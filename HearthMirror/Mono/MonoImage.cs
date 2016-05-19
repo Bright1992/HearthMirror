@@ -2,7 +2,7 @@
 
 namespace HearthMirror.Mono
 {
-	public class MonoImage
+	internal class MonoImage
 	{
 		private readonly Dictionary<string, MonoClass> _classes = new Dictionary<string, MonoClass>();
 		private readonly uint _pImage;

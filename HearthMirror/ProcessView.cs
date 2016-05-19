@@ -5,7 +5,7 @@ using System.Text;
 
 namespace HearthMirror
 {
-	public class ProcessView
+	internal class ProcessView
 	{
 		private readonly IntPtr _procHandle;
 		private readonly long _moduleBase;

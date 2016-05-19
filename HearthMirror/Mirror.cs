@@ -5,7 +5,7 @@ using HearthMirror.Mono;
 
 namespace HearthMirror
 {
-	public class Mirror
+	internal class Mirror
 	{
 		public string ImageName { get; set; }
 		public bool Active => _process != null;

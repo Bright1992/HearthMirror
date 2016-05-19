@@ -1,6 +1,6 @@
 ﻿namespace HearthMirror.Mono
 {
-	public class MonoType
+	internal class MonoType
 	{
 		private readonly uint _pType;
 		private readonly ProcessView _view;

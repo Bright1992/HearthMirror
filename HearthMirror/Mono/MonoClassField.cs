@@ -3,7 +3,7 @@ using System.Text;
 
 namespace HearthMirror.Mono
 {
-	public class MonoClassField
+	internal class MonoClassField
 	{
 		private readonly uint _pField;
 		private readonly ProcessView _view;
