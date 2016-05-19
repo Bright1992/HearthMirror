@@ -30,7 +30,9 @@ namespace HearthMirror
 			}
 		}
 
-		public static IEnumerable<Card> GetCollection()
+		public static List<Card> GetCollection() => TryGetInternal(() => GetCollectionInternal().ToList());
+
+		private static IEnumerable<Card> GetCollectionInternal()
 		{
 			var values = Mirror.Root["NetCache"]["s_instance"]["m_netCache"]["valueSlots"];
 			foreach(var val in values)
