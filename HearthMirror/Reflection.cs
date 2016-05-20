@@ -86,5 +86,8 @@ namespace HearthMirror
 				yield return deck;
 			}
 		}
+
+		public static int GetGameType() => TryGetInternal(InternalGetGameType);
+		private static int InternalGetGameType() => (int) Mirror.Root["GameMgr"]["s_instance"]["m_gameType"];
 	}
 }
