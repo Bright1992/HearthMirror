@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using HearthMirror.Objects;
 
 namespace HearthMirror
@@ -89,5 +90,44 @@ namespace HearthMirror
 
 		public static int GetGameType() => TryGetInternal(InternalGetGameType);
 		private static int InternalGetGameType() => (int) Mirror.Root["GameMgr"]["s_instance"]["m_gameType"];
+
+
+		public static MatchInfo GetMatchInfo => TryGetInternal(GetMatchInfoInternal);
+		private static MatchInfo GetMatchInfoInternal()
+		{
+			var matchInfo = new MatchInfo();
+			var gameState = Mirror.Root["GameState"]["s_instance"];
+			var players = gameState["m_playerMap"]["valueSlots"];
+			foreach(var player in players)
+			{
+				if(player?.Class.Name != "Player")
+					continue;
+				var medalInfo = player["m_medalInfo"];
+				var sMedalInfo = medalInfo?["m_currMedalInfo"];
+				var wMedalInfo = medalInfo?["m_currWildMedalInfo"];
+				var name = player["m_name"];
+				var sRank = sMedalInfo?["rank"];
+				var sLegendRank = sMedalInfo?["legendIndex"];
+				var wRank = wMedalInfo?["rank"];
+				var wLegendRank = wMedalInfo?["legendIndex"];
+				if((bool)player["m_local"])
+				{
+					dynamic netCacheMedalInfo = null;
+					foreach(var fo in Mirror.Root["NetCache"]["s_instance"]["m_netCache"]["valueSlots"])
+					{
+						if(fo?.Class.Name != "NetCacheMedalInfo")
+							continue;
+						netCacheMedalInfo = fo;
+						break;
+					}
+					var sStars = netCacheMedalInfo?["<Standard>k__BackingField"]["<Stars>k__BackingField"];
+					var wStars = netCacheMedalInfo?["<Wild>k__BackingField"]["<Stars>k__BackingField"];
+					matchInfo.LocalPlayer = new MatchInfo.Player(name, sRank, sLegendRank, sStars, wRank, wLegendRank, wStars);
+				}
+				else
+					matchInfo.OpposingPlayer = new MatchInfo.Player(name, sRank, sLegendRank, 0, wRank, wLegendRank, 0);
+			}
+			return matchInfo;
+		}
 	}
 }
