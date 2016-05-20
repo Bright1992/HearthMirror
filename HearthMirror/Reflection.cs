@@ -10,8 +10,10 @@ namespace HearthMirror
 		private static readonly Lazy<Mirror> LazyMirror = new Lazy<Mirror>(() => new Mirror {ImageName = "Hearthstone"});
 		private static Mirror Mirror => LazyMirror.Value;
 
-		private static T TryGetInternal<T>(Func<T> action)
+		private static T TryGetInternal<T>(Func<T> action, bool clearCache = true)
 		{
+			if(clearCache)
+				Mirror.View?.ClearCache();
 			try
 			{
 				return action.Invoke();

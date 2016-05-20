@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -7,12 +8,13 @@ namespace HearthMirror
 {
 	internal class ProcessView
 	{
-		private readonly IntPtr _procHandle;
-		private readonly long _moduleBase;
+		private const int PageSize = 4096;
+		private const int PageCount = 1024;
+		private readonly Cache _cache = new Cache(PageCount);
 		private readonly byte[] _module;
-		private readonly byte[] _buffer = new byte[16];
+		private readonly long _moduleBase;
+		private readonly IntPtr _procHandle;
 		private int _exportOffset;
-		public bool Valid { get; private set; }
 
 		public ProcessView(Process proc)
 		{
@@ -20,6 +22,46 @@ namespace HearthMirror
 			_moduleBase = proc.MainModule.BaseAddress.ToInt64();
 			_module = new byte[proc.MainModule.ModuleMemorySize];
 			Valid = ReadBytes(_module, 0, _module.Length, _moduleBase) && LoadPeHeader();
+		}
+
+		public bool Valid { get; private set; }
+
+		internal void ClearCache() => _cache.Clear();
+
+		private byte[] ReadBytes(int size, long addr, int offset = 0)
+		{
+			var start = (int)(addr/PageSize)*PageSize;
+			var page = _cache.Get(start);
+			if(page == null)
+			{
+				page = ReadPage(start, offset);
+				_cache.Add(start, page);
+			}
+			var pageOffset = addr%PageSize;
+			var buffer = new byte[size];
+			var overflow = (int)pageOffset + size - PageSize;
+			if(overflow > 0)
+			{
+				var read = size - overflow;
+				var remaining = ReadBytes(overflow, addr + read);
+				Array.Copy(page, pageOffset, buffer, 0, read);
+				Array.Copy(remaining, 0, buffer, read, overflow);
+			}
+			else
+				Array.Copy(page, pageOffset, buffer, 0, size);
+			return buffer;
+		}
+
+		private byte[] ReadPage(long addr, int offset)
+		{
+			var buffer = new byte[PageSize];
+			IntPtr bytesRead;
+			var buffHandle = GCHandle.Alloc(buffer);
+			var buffPtr = Marshal.UnsafeAddrOfPinnedArrayElement(buffer, offset);
+			var result = ReadProcessMemory(_procHandle, (IntPtr)unchecked((int)addr), buffPtr, PageSize, out bytesRead) &&
+						(int)bytesRead == PageSize;
+			buffHandle.Free();
+			return result ? buffer : new byte[PageSize];
 		}
 
 		public bool ReadBytes(byte[] buf, int offset, int size, long addr)
@@ -35,101 +77,35 @@ namespace HearthMirror
 			IntPtr bytesRead;
 			var buffHandle = GCHandle.Alloc(buf);
 			var buffPtr = Marshal.UnsafeAddrOfPinnedArrayElement(buf, offset);
-			var result = ReadProcessMemory(_procHandle, (IntPtr)(unchecked((int)addr)), buffPtr, size, out bytesRead) && (int)bytesRead == size;
+			var result = ReadProcessMemory(_procHandle, (IntPtr)unchecked((int)addr), buffPtr, size, out bytesRead) &&
+						(int)bytesRead == size;
 			buffHandle.Free();
 			return result;
 		}
 
-		public uint ReadUint(long addr)
-		{
-			ReadBytes(_buffer, 0, 4, addr);
-			return BitConverter.ToUInt32(_buffer, 0);
-		}
+		public uint ReadUint(long addr) => BitConverter.ToUInt32(ReadBytes(4, addr), 0);
 
-		public int ReadInt(long addr)
-		{
-			ReadBytes(_buffer, 0, 4, addr);
-			return BitConverter.ToInt32(_buffer, 0);
-		}
+		public int ReadInt(long addr) => BitConverter.ToInt32(ReadBytes(4, addr), 0);
 
-		public byte ReadByte(long addr)
-		{
-			ReadBytes(_buffer, 0, 1, addr);
-			return _buffer[0];
-		}
+		public byte ReadByte(long addr) => ReadBytes(1, addr)[0];
 
 		public sbyte ReadSByte(long addr) => unchecked((sbyte)ReadByte(addr));
 
-		public short ReadShort(long addr)
-		{
-			ReadBytes(_buffer, 0, 2, addr);
-			return BitConverter.ToInt16(_buffer, 0);
-		}
+		public short ReadShort(long addr) => BitConverter.ToInt16(ReadBytes(2, addr), 0);
 
-		public ushort ReadUshort(long addr)
-		{
-			ReadBytes(_buffer, 0, 2, addr);
-			return BitConverter.ToUInt16(_buffer, 0);
-		}
+		public ushort ReadUshort(long addr) => BitConverter.ToUInt16(ReadBytes(2, addr), 0);
 
 		public bool ReadBool(long addr) => ReadByte(addr) != 0;
 
-		public float ReadFloat(long addr)
-		{
-			ReadBytes(_buffer, 0, 4, addr);
-			return BitConverter.ToSingle(_buffer, 0);
-		}
+		public float ReadFloat(long addr) => BitConverter.ToSingle(ReadBytes(4, addr), 0);
 
-		public double ReadDouble(long addr)
-		{
-			ReadBytes(_buffer, 0, 8, addr);
-			return BitConverter.ToDouble(_buffer, 0);
-		}
+		public double ReadDouble(long addr) => BitConverter.ToDouble(ReadBytes(8, addr), 0);
 
-		public long ReadLong(long addr)
-		{
-			ReadBytes(_buffer, 0, 8, addr);
-			return BitConverter.ToInt64(_buffer, 0);
-		}
+		public long ReadLong(long addr) => BitConverter.ToInt64(ReadBytes(8, addr), 0);
 
-		public ulong ReadUlong(long addr)
-		{
-			ReadBytes(_buffer, 0, 8, addr);
-			return BitConverter.ToUInt64(_buffer, 0);
-		}
+		public ulong ReadUlong(long addr) => BitConverter.ToUInt64(ReadBytes(8, addr), 0);
 
-		public string ReadCString(long addr)
-		{
-			// Do this in blocks of 16 to minimize reads.
-			// This is equally as safe as byte-at-a-time, and could be done
-			// in larger blocks, but 16 is a good choice for most strings.
-			var buffer = new byte[0x100];
-			var ascii = Encoding.ASCII;
-			var ofs = 0;
-			if(0 != (addr & 15))
-			{
-				var adj = (int)(16 - (addr & 15));
-				ReadBytes(buffer, ofs, adj, addr);
-				for(var i = 0; i < adj; i++)
-				{
-					if(buffer[i] == 0)
-						return ascii.GetString(buffer, 0, i);
-				}
-				ofs += adj;
-				addr += adj;
-			}
-			while(true)
-			{
-				ReadBytes(buffer, ofs, 16, addr);
-				for(var i = 0; i < 16; i++)
-				{
-					if(buffer[ofs + i] == 0)
-						return ascii.GetString(buffer, 0, ofs + i);
-				}
-				ofs += 0x10;
-				addr += 0x10;
-			}
-		}
+		public string ReadCString(long addr) => Encoding.ASCII.GetString(ReadBytes(100, addr).TakeWhile(x => x != 0).ToArray());
 
 		public long GetExport(string name)
 		{
@@ -138,17 +114,17 @@ namespace HearthMirror
 			var ofsNames = BitConverter.ToInt32(_module, _exportOffset + (int)Offsets.ImageExportDirectory_AddressOfNames);
 			for(var i = 0; i < nFunctions; i++)
 			{
-				var nameRva = BitConverter.ToInt32(_module, ofsNames + 4 * i);
+				var nameRva = BitConverter.ToInt32(_module, ofsNames + 4*i);
 				var fName = GetCString(_module, nameRva);
 				if(fName == name)
-					return _moduleBase + BitConverter.ToInt32(_module, ofsFunctions + 4 * i);
+					return _moduleBase + BitConverter.ToInt32(_module, ofsFunctions + 4*i);
 			}
 			return 0;
 		}
 
-		static string GetCString(byte[] buf, int ofs)
+		private static string GetCString(byte[] buf, int ofs)
 		{
-			int i = ofs;
+			var i = ofs;
 			while(0 != buf[i++]) ;
 			return Encoding.ASCII.GetString(buf, ofs, i - ofs - 1);
 		}
