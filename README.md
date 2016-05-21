@@ -2,4 +2,4 @@
 
 ## License
 
-Copyright HearthSim, All Rights Reserved.
+Copyright © HearthSim. All Rights Reserved.
