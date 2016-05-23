@@ -65,26 +65,7 @@ namespace HearthMirror
 			{
 				if(val == null || val.Class.Name != "CollectionDeck")
 					continue;
-				long id = val["ID"];
-				string name = val["m_name"];
-				string hero = val["HeroCardID"];
-				bool wild = val["m_isWild"];
-				var deck = new Deck {Id = id, Name = name, Hero = hero, IsWild = wild};
-				var cardList = val["m_slots"];
-				var cards = cardList["_items"];
-				int size = cardList["_size"];
-				for(var i = 0; i < size; i++)
-				{
-					var card = cards[i];
-					string cardId = card["m_cardId"];
-					int count = card["m_count"];
-					var existingCard = deck.Cards.FirstOrDefault(x => x.Id == cardId);
-					if(existingCard != null)
-						existingCard.Count++;
-					else
-						deck.Cards.Add(new Card(cardId, count, false));
-				}
-				yield return deck;
+				yield return GetDeck(val);
 			}
 		}
 
@@ -128,6 +109,29 @@ namespace HearthMirror
 					matchInfo.OpposingPlayer = new MatchInfo.Player(name, sRank, sLegendRank, 0, wRank, wLegendRank, 0);
 			}
 			return matchInfo;
+		}
+
+		private static Deck GetDeck(dynamic deckObj)
+		{
+			long id = deckObj["ID"];
+			string hero = deckObj["HeroCardID"];
+			bool wild = deckObj["m_isWild"];
+			var deck = new Deck { Id = id, Hero = hero, IsWild = wild };
+			var cardList = deckObj["m_slots"];
+			var cards = cardList["_items"];
+			int size = cardList["_size"];
+			for(var i = 0; i < size; i++)
+			{
+				var card = cards[i];
+				string cardId = card["m_cardId"];
+				int count = card["m_count"];
+				var existingCard = deck.Cards.FirstOrDefault(x => x.Id == cardId);
+				if(existingCard != null)
+					existingCard.Count++;
+				else
+					deck.Cards.Add(new Card(cardId, count, false));
+			}
+			return deck;
 		}
 	}
 }
