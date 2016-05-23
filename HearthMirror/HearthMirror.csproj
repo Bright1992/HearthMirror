@@ -41,6 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Objects\ArenaInfo.cs" />
     <Compile Include="Cache.cs" />
     <Compile Include="Objects\MatchInfo.cs" />
     <Compile Include="Objects\Card.cs" />

@@ -111,6 +111,16 @@ namespace HearthMirror
 			return matchInfo;
 		}
 
+		public static ArenaInfo GetArenaDeck()
+		{
+			var draftManager = Mirror.Root["DraftManager"]["s_instance"];
+			return new ArenaInfo {
+				Wins = draftManager["m_wins"],
+				Losses = draftManager["m_losses"],
+				Deck = GetDeck(draftManager["m_draftDeck"])
+			};
+		}
+
 		private static Deck GetDeck(dynamic deckObj)
 		{
 			long id = deckObj["ID"];
