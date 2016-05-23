@@ -123,10 +123,17 @@ namespace HearthMirror
 
 		private static Deck GetDeck(dynamic deckObj)
 		{
-			long id = deckObj["ID"];
-			string hero = deckObj["HeroCardID"];
-			bool wild = deckObj["m_isWild"];
-			var deck = new Deck { Id = id, Hero = hero, IsWild = wild };
+			var deck = new Deck
+			{
+				Id = deckObj["ID"],
+				Name = deckObj["m_name"],
+				Hero = deckObj["HeroCardID"],
+				IsWild = deckObj["m_isWild"],
+				Type = deckObj["Type"],
+				SeasonId = deckObj["SeasonId"],
+				CardBackId = deckObj["CardBackID"],
+				HeroPremium = deckObj["HeroPremium"],
+			};
 			var cardList = deckObj["m_slots"];
 			var cards = cardList["_items"];
 			int size = cardList["_size"];
