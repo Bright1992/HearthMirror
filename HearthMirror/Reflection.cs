@@ -111,7 +111,9 @@ namespace HearthMirror
 			return matchInfo;
 		}
 
-		public static ArenaInfo GetArenaDeck()
+		public static ArenaInfo GetArenaDeck() => TryGetInternal(GetArenaDeckInternal);
+
+		private static ArenaInfo GetArenaDeckInternal()
 		{
 			var draftManager = Mirror.Root["DraftManager"]["s_instance"];
 			return new ArenaInfo {
