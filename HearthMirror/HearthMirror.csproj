@@ -58,6 +58,9 @@
     <Compile Include="Offsets.cs" />
     <Compile Include="ProcessView.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Enums\ServerOption.cs" />
+    <Compile Include="Enums\ServerOptionFlag.cs" />
+    <Compile Include="ServerOptions.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
