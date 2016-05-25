@@ -74,7 +74,7 @@ namespace HearthMirror
 
 		public static bool IsSpectating() => TryGetInternal(() => (bool)Mirror.Root["GameMgr"]["s_instance"]["m_spectator"]);
 
-		public static MatchInfo GetMatchInfo => TryGetInternal(GetMatchInfoInternal);
+		public static MatchInfo GetMatchInfo() => TryGetInternal(GetMatchInfoInternal);
 		private static MatchInfo GetMatchInfoInternal()
 		{
 			var matchInfo = new MatchInfo();
