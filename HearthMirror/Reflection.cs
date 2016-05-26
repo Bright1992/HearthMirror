@@ -126,6 +126,20 @@ namespace HearthMirror
 			};
 		}
 
+		public static List<Card> GetArenaDraftChoices() => TryGetInternal(() => GetArenaDraftChoicesInternal().ToList());
+
+		private static IEnumerable<Card> GetArenaDraftChoicesInternal()
+		{
+			var choicesList =  Mirror.Root["DraftDisplay"]["s_instance"]["m_choices"];
+			var choices = choicesList["_items"];
+			int size = choicesList["_size"];
+			for(var i = 0; i < size; i++)
+			{
+				if(choices[i] != null)
+					yield return new Card(choices[i]["m_actor"]["m_entityDef"]["m_cardId"], 1, false);
+			}
+		}
+
 		private static Deck GetDeck(dynamic deckObj)
 		{
 			var deck = new Deck
