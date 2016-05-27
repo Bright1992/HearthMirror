@@ -76,6 +76,8 @@ namespace HearthMirror
 
 		public static bool IsSpectating() => TryGetInternal(() => (bool)Mirror.Root["GameMgr"]["s_instance"]["m_spectator"]);
 
+		public static long GetSelectedDeckInMenu() => TryGetInternal(() => (long)Mirror.Root["DeckPickerTrayDisplay"]["s_instance"]["m_selectedCustomDeckBox"]["m_deckID"]);
+
 		public static MatchInfo GetMatchInfo() => TryGetInternal(GetMatchInfoInternal);
 		private static MatchInfo GetMatchInfoInternal()
 		{
