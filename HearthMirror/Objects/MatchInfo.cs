@@ -7,6 +7,7 @@ namespace HearthMirror.Objects
 		public Player OpposingPlayer { get; set; }
 		public int BrawlSeasonId { get; set; }
 		public int MissionId { get; set; }
+		public int RankedSeasonId { get; set; }
 
 		public class Player
 		{

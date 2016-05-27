@@ -82,6 +82,7 @@ namespace HearthMirror
 			var matchInfo = new MatchInfo();
 			var gameState = Mirror.Root["GameState"]["s_instance"];
 			var players = gameState["m_playerMap"]["valueSlots"];
+			var netCacheValues = Mirror.Root["NetCache"]["s_instance"]["m_netCache"]["valueSlots"];
 			foreach(var player in players)
 			{
 				if(player?.Class.Name != "Player")
@@ -97,11 +98,11 @@ namespace HearthMirror
 				if((bool)player["m_local"])
 				{
 					dynamic netCacheMedalInfo = null;
-					foreach(var fo in Mirror.Root["NetCache"]["s_instance"]["m_netCache"]["valueSlots"])
+					foreach(var netCache in netCacheValues)
 					{
-						if(fo?.Class.Name != "NetCacheMedalInfo")
+						if(netCache?.Class.Name != "NetCacheMedalInfo")
 							continue;
-						netCacheMedalInfo = fo;
+						netCacheMedalInfo = netCache;
 						break;
 					}
 					var sStars = netCacheMedalInfo?["<Standard>k__BackingField"]["<Stars>k__BackingField"];
@@ -113,6 +114,13 @@ namespace HearthMirror
 			}
 			matchInfo.BrawlSeasonId = Mirror.Root["TavernBrawlManager"]["s_instance"]?["m_currentMission"]?["seasonId"] ?? 0;
 			matchInfo.MissionId = Mirror.Root["GameMgr"]["s_instance"]["m_missionId"];
+			foreach(var netCache in netCacheValues)
+			{
+				if(netCache?.Class.Name != "NetCacheRewardProgress")
+					continue;
+				matchInfo.RankedSeasonId = netCache["<Season>k__BackingField"];
+				break;
+			}
 			return matchInfo;
 		}
 
