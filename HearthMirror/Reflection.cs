@@ -90,10 +90,10 @@ namespace HearthMirror
 				var sMedalInfo = medalInfo?["m_currMedalInfo"];
 				var wMedalInfo = medalInfo?["m_currWildMedalInfo"];
 				var name = player["m_name"];
-				var sRank = sMedalInfo?["rank"];
-				var sLegendRank = sMedalInfo?["legendIndex"];
-				var wRank = wMedalInfo?["rank"];
-				var wLegendRank = wMedalInfo?["legendIndex"];
+				var sRank = sMedalInfo?["rank"] ?? 0;
+				var sLegendRank = sMedalInfo?["legendIndex"] ?? 0;
+				var wRank = wMedalInfo?["rank"] ?? 0;
+				var wLegendRank = wMedalInfo?["legendIndex"] ?? 0;
 				if((bool)player["m_local"])
 				{
 					dynamic netCacheMedalInfo = null;
