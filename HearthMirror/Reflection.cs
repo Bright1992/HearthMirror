@@ -111,6 +111,8 @@ namespace HearthMirror
 				else
 					matchInfo.OpposingPlayer = new MatchInfo.Player(name, sRank, sLegendRank, 0, wRank, wLegendRank, 0);
 			}
+			matchInfo.BrawlSeasonId = Mirror.Root["TavernBrawlManager"]["s_instance"]?["m_currentMission"]?["seasonId"] ?? 0;
+			matchInfo.MissionId = Mirror.Root["GameMgr"]["s_instance"]["m_missionId"];
 			return matchInfo;
 		}
 

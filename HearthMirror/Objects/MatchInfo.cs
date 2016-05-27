@@ -5,6 +5,8 @@ namespace HearthMirror.Objects
 		public Player LocalPlayer { get; set; }
 
 		public Player OpposingPlayer { get; set; }
+		public int BrawlSeasonId { get; set; }
+		public int MissionId { get; set; }
 
 		public class Player
 		{
