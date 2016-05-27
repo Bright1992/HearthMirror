@@ -81,21 +81,24 @@ namespace HearthMirror
 		{
 			var matchInfo = new MatchInfo();
 			var gameState = Mirror.Root["GameState"]["s_instance"];
+			var playerIds = gameState["m_playerMap"]["keySlots"];
 			var players = gameState["m_playerMap"]["valueSlots"];
 			var netCacheValues = Mirror.Root["NetCache"]["s_instance"]["m_netCache"]["valueSlots"];
-			foreach(var player in players)
+			for(var i = 0; i < playerIds.Length; i++)
 			{
-				if(player?.Class.Name != "Player")
+				if(players[i]?.Class.Name != "Player")
 					continue;
-				var medalInfo = player["m_medalInfo"];
+				var medalInfo = players[i]["m_medalInfo"];
 				var sMedalInfo = medalInfo?["m_currMedalInfo"];
 				var wMedalInfo = medalInfo?["m_currWildMedalInfo"];
-				var name = player["m_name"];
+				var name = players[i]["m_name"];
 				var sRank = sMedalInfo?["rank"] ?? 0;
 				var sLegendRank = sMedalInfo?["legendIndex"] ?? 0;
 				var wRank = wMedalInfo?["rank"] ?? 0;
 				var wLegendRank = wMedalInfo?["legendIndex"] ?? 0;
-				if((bool)player["m_local"])
+				var cardBack = players[i]["m_cardBackId"];
+				var id = playerIds[i];
+				if((bool)players[i]["m_local"])
 				{
 					dynamic netCacheMedalInfo = null;
 					foreach(var netCache in netCacheValues)
@@ -107,10 +110,10 @@ namespace HearthMirror
 					}
 					var sStars = netCacheMedalInfo?["<Standard>k__BackingField"]["<Stars>k__BackingField"];
 					var wStars = netCacheMedalInfo?["<Wild>k__BackingField"]["<Stars>k__BackingField"];
-					matchInfo.LocalPlayer = new MatchInfo.Player(name, sRank, sLegendRank, sStars, wRank, wLegendRank, wStars);
+					matchInfo.LocalPlayer = new MatchInfo.Player(id, name, sRank, sLegendRank, sStars, wRank, wLegendRank, wStars, cardBack);
 				}
 				else
-					matchInfo.OpposingPlayer = new MatchInfo.Player(name, sRank, sLegendRank, 0, wRank, wLegendRank, 0);
+					matchInfo.OpposingPlayer = new MatchInfo.Player(id, name, sRank, sLegendRank, 0, wRank, wLegendRank, 0, cardBack);
 			}
 			matchInfo.BrawlSeasonId = Mirror.Root["TavernBrawlManager"]["s_instance"]?["m_currentMission"]?["seasonId"] ?? 0;
 			matchInfo.MissionId = Mirror.Root["GameMgr"]["s_instance"]["m_missionId"];
