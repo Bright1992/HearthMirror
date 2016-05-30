@@ -15,10 +15,10 @@ namespace HearthMirror
 
 		private static T TryGetInternal<T>(Func<T> action, bool clearCache = true)
 		{
-			if(clearCache)
-				Mirror.View?.ClearCache();
 			try
 			{
+				if(clearCache)
+					Mirror.View?.ClearCache();
 				return action.Invoke();
 			}
 			catch
