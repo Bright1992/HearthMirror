@@ -216,5 +216,21 @@ namespace HearthMirror
 			}
 			return false;
 		}
+
+		public static Deck GetEditedDeck() => TryGetInternal(GetEditedDeckInternal);
+		public static Deck GetEditedDeckInternal()
+		{
+			var taggedDecks = Mirror.Root["CollectionManager"]["s_instance"]["m_taggedDecks"];
+			var tags = taggedDecks["keySlots"];
+			var decks = taggedDecks["valueSlots"];
+			for (var i = 0; i < tags.Length; i++)
+			{
+				if(tags[i] == null || decks[i] == null)
+					continue;
+				if(tags[i]["value__"] == 0)
+					return GetDeck(decks[i]);
+			}
+			return null;
+		}
 	}
 }
